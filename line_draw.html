@@ -1,11 +1,47 @@
+<!DOCTYPE html>
 <html>
 <head>
 <link rel = "stylesheet" href = "./fun.css">
 </head>
 <body>
-<canvas id="small_plane" width = "600" height = "500"></canvas>
-<script src="./draw.js"> </script>
-<button id="start", onclick = "color_loop()"> Click Me</button>
-<button id="stop", onclick = "stop_loop()"> Yamete!</button>
+<center><h1>P*tch Perfect</h1></center>
+<script type='text/javascript'> 
+  let g_do_practice_learn_loop = false; 
+</script>
+<div class = "root">
+  <div class="config">
+    <div>
+    <button id="start", onclick = "color_loop()"> Click Me</button>
+    <button id="stop", onclick = "stop_loop()"> Stop!</button>
+    </div>
+    <div>
+    <label for = "mode">What do you want to do?</label>
+    <select id = "mode_choice" name = "mode"> 
+      <option />
+      <option value="Learn">Learn</option>
+      <option value="Practice">Practice</option>
+    </select>
+    </div>
+
+    <div hidden id = "very_manly_div">
+    <label for = "type"> What do you want to </label>
+    <select id = "wooo" name = "type">
+      <option />
+      <option value = "Notes">Notes</option>
+      <option value = "RPT">Relative Pitch Training</option>
+    </select>
+    </div>
+
+  </div>
+
+  <div class="display">
+    <canvas id="small_plane"></canvas>
+    <script src="./draw.js"> </script>
+  </div>
+  
+  <div class="dynamic">
+    <p>Made by Ojas Mishra</p>
+  </div>
+</div>
 </body>
 </html>

@@ -1,3 +1,26 @@
+html {
+    height:100%;
+}
+body {
+    background-color:#EE7133;
+}
+
 canvas {
     border: 1px solid black;
+    width:90%;
+}
+
+.root {
+    display:flex;
+    height:90%;
+}
+
+.display {
+    width:33%;
+    height:70%;
+}
+
+.config {
+    width: 33%;
+    height:100%; 
 }

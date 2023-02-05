@@ -4,10 +4,12 @@ const ymax = sheet.height, xmax = sheet.width;
 
 // create web audio api context
 var audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+var current_note;
+
 
 function playNote(frequency, duration) {
   // create Oscillator node
-  console.log(frequency);
+  //console.log(frequency);
   var oscillator = audioCtx.createOscillator();
   oscillator.type = 'square';
   oscillator.frequency.value = frequency; // value in hertz
@@ -30,55 +32,7 @@ function get_rand_color(){
 
 colors = ["#FF0000", "#FF8800","#FFFF00", "#88FF00", "#00FF00", "#00FF88", 
     "#00FFFF", "#0080FF", "#0000FF", "#8800FF", "#FF00FF", "#FF0088"];
-
-dark_colors = ["#800000", "#804000","#808000", "#408000", "#008000", "#008040", 
-    "#008080", "#008040", "#000080", "#400080", "#800080", "#800040"];
 /*
-function hsv_to_rgb(h, s, l){
-    let c = s*(1 - Math.abs(2*l - 1));
-    let x = c*(1 - (Math.abs(h/60) % 2 - 1));
-    let m = l - c/2;
-    // using boolean branchless if statements
-    let r, g, b;
-    if(h >= 0 && h < 60){
-        r = c;
-        g = x;
-        b = 0;
-    }
-    else if(h >= 60 && h < 120){
-        r = x;
-        g = c;
-        b = 0;
-    }
-    else if(h >= 120 && h < 180){
-        r = 0;
-        g = c;
-        b = x;
-    }
-    else if(h >= 180 && h < 240){
-        r = 0;
-        g = x;
-        b = c;
-    }
-    else if(h >= 240 && h < 300){
-        r = x;
-        g = 0;
-        b = c;
-    }
-    else{
-        r = c;
-        g = 0;
-        b = x;
-    }
-
-    r = Math.floor((r+m)*255).toString(16).padStart(2, "0");
-    g = Math.floor((g+m)*255).toString(16).padStart(2, "0");
-    b = Math.floor((b+m)*255).toString(16).padStart(2, "0");
-    console.log(r, g, b, h, c, x);
-    return "#" + r+g+b;
-
-}
-*/
 N = 100;
 for (let i = 0; i < N; i += 1){
     x = 50*(i % num_squares);
@@ -86,7 +40,7 @@ for (let i = 0; i < N; i += 1){
     ctx.fillStyle = get_color_wheel(i/N, 0.3);
     ctx.fillRect(x, y, 50, 50);
 }
-
+*/
 function linearScale(val, start, end){
     // start <= val <  end
     return (val - start)/(end - start);
@@ -132,7 +86,7 @@ function freq_to_color(freq) {
     let scale = t/12;
     let alpha = scale / 8;
      
-    console.log(scale%1, scale, t);
+    //console.log(scale%1, scale, t);
     return get_color_wheel(scale%1, alpha);
 }
 
@@ -144,22 +98,30 @@ function set_color(col_wheel_idx, scale){
     ctx.clearRect(0, 0, xmax, ymax);  
     ctx.fillStyle = get_color_wheel(col_wheel_idx/12, 1 - alpha);
     ctx.fillRect(0, 0, xmax, ymax);
-    ctx.fillStyle = "#000000"
-    ctx.font = "30px Arial";
-    ctx.fillText(Tones[col_wheel_idx] + scale, xmax/2, ymax/2);
     ctx.stroke();
 }
 
-function set_color_2(color) { 
+function set_color_2(freq) {
+    color = freq_to_color(freq);
     ctx.clearRect(0, 0, xmax, ymax);  
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, xmax, ymax);
-    //ctx.fillStyle = "#000000"
-    //ctx.font = "30px Arial";
-    //ctx.fillText(Tones[col_wheel_idx] + scale, xmax/2, ymax/2);
+    ctx.stroke();
+}
+// must be called on clear board
+function write_frequency(freq){ 
+    ctx.fillStyle = "#000000"
+    ctx.font = "30px Arial";
+    ctx.fillText("" + freq + " Hz", xmax/2, ymax/2);
     ctx.stroke();
 }
 
+function write_note(c, s){ 
+    ctx.fillStyle = "#000000"
+    ctx.font = "30px Arial";
+    ctx.fillText(Tones[c] + s, xmax/2, ymax/2);
+    ctx.stroke();
+}
 function get_freq(c, s){
     return 16.35*Math.pow(2, (1/12)*(c + s*12))
 }
@@ -171,48 +133,85 @@ function fine_off_tune(c, s){
     return prev + (next - prev)*Math.random();
 }
 
-var do_loop = false;
+let do_loop = false;
 function stop_loop(){
     do_loop = false;
 }
 
+let g_do_learn_practice_loop = false;
+async function learn_practice_loop(){
+    let min = 300;
+    let max = 600;
+    while (g_do_learn_practice_loop){
+        let freq = Math.floor(min + Math.random()*(max - min));
+        console.log(freq);
+        set_color_2(freq);
+        playNote(freq, 1000);
+        await new Promise(r => setTimeout(r, 3000));
+        write_frequency(freq); 
+        await new Promise(r => setTimeout(r, 2000))
+    }
+}
+
+//learn_practice_loop();
 async function color_loop(){
-    const timeout = 100;
+    const timeout = 500;
     do_loop = true;
     let s, c;
-    let i = 20;
-    const max_freq = get_freq(8, 12);
+    let i = 300;
     while (do_loop){
         //s = Math.floor(Math.random()*3);
         //c = Math.floor(Math.random()*colors.length);
-        //s = Math.floor(i/12);
-        //c = (i) % colors.length;
-        playNote(i, timeout);
-        
-        //set_color(c, s);
-        set_color_2(freq_to_color(i));
-        i = (i + 1) % max_freq;
+        s = Math.floor(i/12);
+        c = (i) % colors.length;
+        freq = get_freq(c, s);
+        console.log(c, s);
+        //playNote(i, timeout);
+        playNote(freq, timeout);
+        set_color_2(freq);
+        write_note(c, s);
+        //set_color_2(freq_to_color(i));
+        i = (i + 1) % (8*12);
         await new Promise(r => setTimeout(r, timeout));
     }
 }
 //color_loop();
 //console.log("#" + get_rand_color());
+// handler logic as I couldn't work out inter file communication
 
-function get_rand(xmax, ymax){
-    return [Math.floor(Math.random()*xmax), Math.floor(Math.random()*ymax)];
-}
-/*
-ctx.beginPath();
-const n = 5;
-function draw_rand_segment(ctx){
-    const [x1, y1] = get_rand(xmax, ymax), 
-        [x2, y2] = get_rand(xmax, ymax);
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-}
-for (let i = 0; i < n; i++){
-    draw_rand_segment(ctx);
-}
-draw_rand_segment(ctx);
-*/
+let x = document.getElementById("mode_choice");
+let y_div = document.getElementById("very_manly_div");
+const label_text = "What do you want to";
+
+x.addEventListener("change", e => {
+    console.log(x.value);
+    if (x.value == ""){
+        console.log("pog 1"); 
+        g_do_learn_practice_loop = false;
+        y_div.setAttribute("hidden", "hidden");
+    }
+    if (x.value == "Learn") {
+        y_div.children[0].innerText = label_text + " learn?"
+        y_div.removeAttribute("hidden");
+        console.log("pog 2");
+    }
+    if (x.value == "Practice"){
+        y_div.children[0].innerText = label_text + " practice?"
+        y_div.removeAttribute("hidden");
+        console.log("pog 3");
+    }
+});
+
+let y = document.getElementById("wooo");
+y.addEventListener("change", e => {
+    g_do_learn_practice_loop = false;
+    if (y.value == "RPT"){
+        g_do_learn_practice_loop = true;// global 
+        learn_practice_loop();
+    }
+    if (y.value == "Notes") {
+        console.log("NO");
+    }
+});
+
+
